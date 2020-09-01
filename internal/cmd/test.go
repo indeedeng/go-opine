@@ -42,6 +42,7 @@ type testCmd struct {
 	junit         string
 	xmlcov        string
 	coverprofile  string
+	norace        bool
 	minCovPercent float64
 }
 
@@ -64,6 +65,7 @@ func (t *testCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&t.junit, "junit", "", "write JUnit XML test results")
 	f.StringVar(&t.xmlcov, "xmlcov", "", "write Cobertura XML coverage")
 	f.StringVar(&t.coverprofile, "coverprofile", "", "write Go coverprofile coverage")
+	f.BoolVar(&t.norace, "norace", false, "compile tests with race detector disabled")
 }
 
 func (t *testCmd) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
@@ -91,7 +93,7 @@ func (t *testCmd) impl() error {
 
 	var errs []error
 	var testOutBuf bytes.Buffer
-	testErr := gotest.Run(
+	options := []gotest.Option{
 		gotest.Race(),
 		gotest.CoverProfile(covPath),
 		gotest.CoverPkg(covPkgs),
@@ -99,7 +101,12 @@ func (t *testCmd) impl() error {
 		gotest.P(runtime.GOMAXPROCS(0)),
 		gotest.QuietOutput(t.out),
 		gotest.VerboseOutput(&testOutBuf),
-	)
+	}
+	if !t.norace {
+		options = append(options, gotest.Race())
+	}
+
+	testErr := gotest.Run(options...)
 	if testErr != nil {
 		errs = append(errs, fmt.Errorf("unit tests failed: %w", testErr))
 	}

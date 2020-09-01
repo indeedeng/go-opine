@@ -20,7 +20,7 @@ import (
 // Generate testdata/cover.out by running the ./testdata tests.
 //go:generate go test -v -race -coverprofile=testdata/cover.out -covermode=atomic ./testdata
 
-var generatedFileRegexp = regexp.MustCompile(`^// Code generated .* DO NOT EDIT\.$`)
+var generatedFileRegexp = regexp.MustCompile(`(?m:^// Code generated .* DO NOT EDIT\.$)`)
 
 type Coverage struct {
 	profiles []*cover.Profile
@@ -123,7 +123,30 @@ func isGenerated(filePath string) (bool, error) {
 			return true, nil
 		}
 	}
-	return false, scanner.Err()
+	return isGeneratedReader(bufio.NewReader(file))
+}
+
+// isGeneratedReader checks if the file being read by the provided
+// io.RuneReader was generated or not.
+func isGeneratedReader(rr io.RuneReader) (bool, error) {
+	var err error
+	res := generatedFileRegexp.MatchReader(
+		// Snooping required due to https://github.com/golang/go/issues/40509.
+		runeReaderFunc(
+			func() (rune, int, error) {
+				var (
+					r rune
+					n int
+				)
+				r, n, err = rr.ReadRune()
+				return r, n, err
+			},
+		),
+	)
+	if err == io.EOF {
+		err = nil
+	}
+	return res, err
 }
 
 // profilesWithoutGenerated returns a new slice of profiles with all
@@ -253,4 +276,10 @@ func modsInProfiles(profiles []*cover.Profile) []string {
 		}
 	}
 	return mods
+}
+
+type runeReaderFunc func() (rune, int, error)
+
+func (f runeReaderFunc) ReadRune() (rune, int, error) {
+	return f()
 }

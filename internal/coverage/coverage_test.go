@@ -1,9 +1,12 @@
 package coverage
 
 import (
+	"bufio"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -96,4 +99,23 @@ func Test_Ratio_100percent(t *testing.T) {
 	require.NoError(t, err)
 	ratio := cov.Ratio()
 	require.Equal(t, 1.0, ratio)
+}
+func Test_isGeneratedReader_veryLongLine(t *testing.T) {
+	veryLongLine := "package foo\n\n" +
+		"// " + strings.Repeat("a", bufio.MaxScanTokenSize+1) +
+		"\n\n// Code generated ... DO NOT EDIT.\n"
+	res, err := isGeneratedReader(strings.NewReader(veryLongLine))
+	require.NoError(t, err)
+	require.True(t, res)
+}
+
+func Test_isGeneratedReader_runeReaderErr(t *testing.T) {
+	_, err := isGeneratedReader(notEOFErrRuneReader{})
+	require.Error(t, err)
+}
+
+type notEOFErrRuneReader struct{}
+
+func (notEOFErrRuneReader) ReadRune() (rune, int, error) {
+	return 0, 0, errors.New("not EOF")
 }
