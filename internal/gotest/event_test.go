@@ -87,7 +87,7 @@ func Test_eventStreamParser_Parse_unmarshalError(t *testing.T) {
 }
 
 func Test_eventStreamParser_Parse_acceptError(t *testing.T) {
-	expectedErr := errors.New("oh, no!")
+	expectedErr := errors.New("failed to parse")
 	tested := newEventStreamParser(eventAccepterFunc(func(e event) error { return expectedErr }))
 	err := tested.Parse(strings.NewReader("{}\n"))
 	require.Equal(t, expectedErr, err)

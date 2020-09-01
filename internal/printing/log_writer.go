@@ -11,7 +11,7 @@ func NewLogWriter(to io.Writer) *LogWriter {
 }
 
 // LogWriter wraps an io.Writer and ignores errors when writing. It also
-// provides a Log method similar to log.Printf.
+// provides a Logf method similar to log.Printf.
 type LogWriter struct {
 	out io.Writer
 	mu  sync.Mutex
@@ -28,8 +28,8 @@ func (lw *LogWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-// Log will write a log line to the underlying io.Writer. A newline is
+// Logf will write a log line to the underlying io.Writer. A newline is
 // automatically appended.
-func (lw *LogWriter) Log(format string, a ...interface{}) {
+func (lw *LogWriter) Logf(format string, a ...interface{}) {
 	_, _ = fmt.Fprintf(lw, format+"\n", a...)
 }

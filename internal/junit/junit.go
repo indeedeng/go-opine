@@ -8,7 +8,7 @@ import (
 )
 
 // Write a JUnit XML file from the provided Go test output.
-func Write(goTestOutput string, outPath string) error {
+func Write(goTestOutput, outPath string) error {
 	junitOut, _, err := run.Cmd(
 		"go",
 		run.Args("run", "github.com/jstemmer/go-junit-report"),
@@ -18,7 +18,7 @@ func Write(goTestOutput string, outPath string) error {
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(outPath, []byte(junitOut), 0666); err != nil {
+	if err := ioutil.WriteFile(outPath, []byte(junitOut), 0666); err != nil { //nolint:gosec
 		return err
 	}
 	return nil

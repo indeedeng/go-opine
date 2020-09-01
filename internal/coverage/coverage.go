@@ -84,7 +84,7 @@ func (cov *Coverage) XML(outPath string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(outPath, []byte(xmlCovOut), 0666)
+	return ioutil.WriteFile(outPath, []byte(xmlCovOut), 0666) //nolint:gosec
 }
 
 // Ratio returns the ratio of covered statements over all statements. The

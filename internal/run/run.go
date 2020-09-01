@@ -74,12 +74,12 @@ func Cmd(command string, args []string, opts ...Option) (string, string, error) 
 	}
 	sp.cmd.Stderr = io.MultiWriter(stderrs...)
 
-	sp.log.Log("Running %q with args %q...", sp.cmd.Path, sp.cmd.Args[1:])
+	sp.log.Logf("Running %q with args %q...", sp.cmd.Path, sp.cmd.Args[1:])
 	err := sp.cmd.Run()
 	if err != nil {
-		sp.log.Log("Command failed: %v", err)
+		sp.log.Logf("Command failed: %v", err)
 	} else {
-		sp.log.Log("Command completed successfully")
+		sp.log.Logf("Command completed successfully")
 	}
 
 	return stdout.String(), stderr.String(), err

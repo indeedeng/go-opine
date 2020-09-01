@@ -35,7 +35,7 @@ func (w *workaroundGoIssue35180ResultAccepter) Accept(res result) error {
 	}
 
 	match := workaroundGoIssue35180Regexp.FindStringSubmatch(res.Output)
-	if match == nil || match[workaroundGoIssue35180RegexpPackage] != res.Key.Package {
+	if match == nil || match[workaroundGoIssue35180RegexpPackage] != res.Key.Package { //nolint:gocritic
 		return w.next.Accept(res)
 	}
 	matchOutput := match[workaroundGoIssue35180RegexpOutput]

@@ -10,6 +10,8 @@ var (
 	removePassOutputRegexp     = regexp.MustCompile(`(?m)(?:\nPASS$|^PASS\n)`)
 )
 
+const testFailure = "fail"
+
 // removeCoverageOutput is a resultAccepter that removes coverage-related
 // output from results before forwarding to the next result accepter.
 type removeCoverageOutput struct {
@@ -58,7 +60,7 @@ func newQuietOutput(to io.Writer) *quietOutput {
 
 func (q quietOutput) Accept(res result) error {
 	// Only print output from failed tests.
-	if res.Key.Test != "" && res.Outcome == "fail" {
+	if res.Key.Test != "" && res.Outcome == testFailure {
 		_, err := q.to.Write([]byte(res.Output))
 		return err
 	}

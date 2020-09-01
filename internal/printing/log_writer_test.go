@@ -28,6 +28,6 @@ func Test_LogWriter_Write_error(t *testing.T) {
 func Test_LogWriter_Log(t *testing.T) {
 	var b bytes.Buffer
 	tested := NewLogWriter(&b)
-	tested.Log("a %s %s", "b", "c")
+	tested.Logf("a %s %s", "b", "c")
 	require.Equal(t, "a b c\n", b.String())
 }

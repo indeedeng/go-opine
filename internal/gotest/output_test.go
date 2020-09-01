@@ -29,7 +29,7 @@ ok  	oss.indeed.com/go/go-opine/internal/cmd	11.527s
 }
 
 func Test_removeCoverageOutput_Accept_error(t *testing.T) {
-	expectedErr := errors.New("oh, NO!")
+	expectedErr := errors.New("failed to parse")
 	tested := newRemoveCoverageOutput(resultAccepterFunc(func(res result) error { return expectedErr }))
 	err := tested.Accept(result{})
 	require.Equal(t, expectedErr, err)
@@ -45,9 +45,9 @@ func Test_verboseOutput_Accept(t *testing.T) {
 }
 
 func Test_verboseOutput_Accept_error(t *testing.T) {
-	expectedErr := errors.New("Can I do it?")
+	expectedErr := errors.New("failed to parse")
 	tested := newVerboseOutput(&errorWriter{err: expectedErr})
-	err := tested.Accept(result{Output: "I can do it!"})
+	err := tested.Accept(result{Output: "success"})
 	require.Equal(t, expectedErr, err)
 }
 
@@ -115,9 +115,9 @@ FAIL	oss.indeed.com/go/go-opine/internal/cmd	11.527s
 }
 
 func Test_quietOutput_Accept_error(t *testing.T) {
-	expectedErr := errors.New("Can I do it?")
+	expectedErr := errors.New("failed")
 	tested := newQuietOutput(&errorWriter{err: expectedErr})
-	err := tested.Accept(result{Output: "I can do it!"})
+	err := tested.Accept(result{Output: "success"})
 	require.Equal(t, expectedErr, err)
 }
 
