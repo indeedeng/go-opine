@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"runtime"
@@ -84,7 +83,7 @@ func (t *testCmd) impl() error {
 	covPkgsOut, _, err := run.Cmd(
 		"go",
 		run.Args("list", "-f", "{{ if .GoFiles }}{{ .ImportPath }}{{ end }}", "./..."),
-		run.Log(ioutil.Discard),
+		run.Log(io.Discard),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to list Go packages: %w", err)

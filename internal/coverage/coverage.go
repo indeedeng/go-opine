@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -77,14 +76,14 @@ func (cov *Coverage) XML(outPath string) error {
 	}
 	xmlCovOut, _, err := run.Cmd(
 		"go",
-		run.Args("run", "github.com/t-yuki/gocover-cobertura"),
+		run.Args("run", "github.com/t-yuki/gocover-cobertura@v0.0.0-20180217150009-aaee18c8195c"),
 		run.Stdin(modifiedGoCov.String()),
 		run.SuppressStdout(),
 	)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(outPath, []byte(xmlCovOut), 0666) //nolint:gosec
+	return os.WriteFile(outPath, []byte(xmlCovOut), 0666) //nolint:gosec
 }
 
 // Ratio returns the ratio of covered statements over all statements. The
@@ -240,7 +239,7 @@ func findModPaths(profiles []*cover.Profile) (map[string]string, error) {
 		[]string{"list", "-f", `{{ .ImportPath | printf "%q" }} {{ .Dir | printf "%q" }}`},
 		mods...,
 	)
-	stdout, stderr, err := run.Cmd("go", args, run.Log(ioutil.Discard))
+	stdout, stderr, err := run.Cmd("go", args, run.Log(io.Discard))
 	if err != nil {
 		return nil, fmt.Errorf("error running go list [stdout=%q stderr=%q]: %w", stdout, stderr, err)
 	}

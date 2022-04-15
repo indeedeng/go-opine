@@ -2,7 +2,8 @@
 package junit
 
 import (
-	"io/ioutil"
+	"io"
+	"os"
 
 	"oss.indeed.com/go/go-opine/internal/run"
 )
@@ -11,14 +12,14 @@ import (
 func Write(goTestOutput, outPath string) error {
 	junitOut, _, err := run.Cmd(
 		"go",
-		run.Args("run", "github.com/jstemmer/go-junit-report"),
+		run.Args("run", "github.com/jstemmer/go-junit-report@v0.9.1"),
 		run.Stdin(goTestOutput),
-		run.Log(ioutil.Discard),
+		run.Log(io.Discard),
 	)
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(outPath, []byte(junitOut), 0666); err != nil { //nolint:gosec
+	if err := os.WriteFile(outPath, []byte(junitOut), 0666); err != nil { //nolint:gosec
 		return err
 	}
 	return nil

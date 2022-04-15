@@ -52,9 +52,9 @@ func Test_CoverProfile(t *testing.T) {
 	err = cov.CoverProfile(outPath)
 	require.NoError(t, err)
 
-	inBytes, err := ioutil.ReadFile(inPath)
+	inBytes, err := os.ReadFile(inPath)
 	require.NoError(t, err)
-	outBytes, err := ioutil.ReadFile(outPath)
+	outBytes, err := os.ReadFile(outPath)
 	require.NoError(t, err)
 	require.Equal(t, string(inBytes), string(outBytes))
 }
@@ -77,7 +77,7 @@ func Test_XML(t *testing.T) {
 	}
 	err = cov.XML(outPath)
 	require.NoError(t, err)
-	outBytes, err := ioutil.ReadFile(outPath)
+	outBytes, err := os.ReadFile(outPath)
 	require.NoError(t, err)
 	out := string(outBytes)
 	require.Contains(t, out, "\"testdata/not_generated.go\"")

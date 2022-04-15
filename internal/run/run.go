@@ -40,7 +40,7 @@ type cmdinfo struct {
 //
 // The above output can be configured as follows:
 //   * Use Log to change the output destination (from os.Stdout) to the
-//     provided io.Writer. Use ioutil.Discard if you do not want anything
+//     provided io.Writer. Use io.Discard if you do not want anything
 //     printed.
 //   * Use SuppressStdout to prevent the stdout from being written. It will
 //     still be returned.
