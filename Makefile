@@ -11,29 +11,15 @@ deps: ## download go modules
 	go mod download
 
 .PHONY: fmt
-fmt: lint/check ## ensure consistent code style
-	go run oss.indeed.com/go/go-groups -w .
-	golangci-lint run --fix > /dev/null 2>&1 || true
+fmt: ## ensure consistent code style
+	go run oss.indeed.com/go/go-groups@v1.1.2 -w .
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2 run --fix > /dev/null 2>&1 || true
 	go mod tidy
 
-.PHONY: lint/check
-lint/check:
-	@if ! golangci-lint --version > /dev/null 2>&1; then \
-		echo -e "\033[0;33mgolangci-lint is not installed: run \`\033[0;32mmake lint-install\033[0m\033[0;33m\` or install it from https://golangci-lint.run\033[0m"; \
-		exit 1; \
-	fi
-
-.PHONY: lint-install
-lint-install: ## installs golangci-lint to the go bin dir
-	@if ! golangci-lint --version > /dev/null 2>&1; then \
-		echo "Installing golangci-lint"; \
-		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(BIN_DIR) v1.30.0; \
-	fi
-
 .PHONY: lint
-lint: lint/check ## run golangci-lint
-	golangci-lint run
-	@if [ -n "$$(go run oss.indeed.com/go/go-groups -l .)" ]; then \
+lint:
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2 run
+	@if [ -n "$$(go run oss.indeed.com/go/go-groups@v1.1.2 -l .)" ]; then \
 		echo -e "\033[0;33mdetected fmt problems: run \`\033[0;32mmake fmt\033[0m\033[0;33m\`\033[0m"; \
 		exit 1; \
 	fi

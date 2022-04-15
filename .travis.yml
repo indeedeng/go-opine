@@ -1,7 +1,4 @@
 language: go
 
 go:
-  - 1.14.x
-
-before_script:
-  - make lint-install
+  - 1.17.x

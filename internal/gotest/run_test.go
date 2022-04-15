@@ -59,7 +59,7 @@ func Test_Run_allOptions(t *testing.T) {
 	require.Contains(t, quietOutput, expectedPackageOutput)
 	require.Contains(t, verboseOutput, expectedPackageOutput)
 
-	cov, err := ioutil.ReadFile(covPath)
+	cov, err := os.ReadFile(covPath)
 	require.NoError(t, err)
 	require.Contains(t, string(cov), expectedPackage)
 }

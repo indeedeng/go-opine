@@ -20,7 +20,7 @@ func Test_Write(t *testing.T) {
 	outPath := filepath.Join(outDir, "junit.xml")
 	err = Write(goTestOutput, outPath)
 	require.NoError(t, err)
-	outBytes, err := ioutil.ReadFile(outPath)
+	outBytes, err := os.ReadFile(outPath)
 	require.NoError(t, err)
 	out := string(outBytes)
 	require.Contains(t, out, "\"Test_Data\"")

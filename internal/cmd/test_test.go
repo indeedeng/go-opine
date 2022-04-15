@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -21,7 +22,7 @@ func Test_TestCmd_impl(t *testing.T) {
 	xmlcovPath := filepath.Join(outDir, "lang-go-cobertura.xml")
 	coverprofilePath := filepath.Join(outDir, "cover.out")
 	tested := testCmd{
-		out:          ioutil.Discard,
+		out:          io.Discard,
 		junit:        junitPath,
 		xmlcov:       xmlcovPath,
 		coverprofile: coverprofilePath,
@@ -30,13 +31,13 @@ func Test_TestCmd_impl(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the files were generated.
-	junitBytes, err := ioutil.ReadFile(junitPath)
+	junitBytes, err := os.ReadFile(junitPath)
 	require.NoError(t, err)
 	require.Contains(t, string(junitBytes), "\"Test_Library\"")
-	xmlcovBytes, err := ioutil.ReadFile(xmlcovPath)
+	xmlcovBytes, err := os.ReadFile(xmlcovPath)
 	require.NoError(t, err)
 	require.Contains(t, string(xmlcovBytes), "\"library/library.go\"")
-	coverProfileBytes, err := ioutil.ReadFile(coverprofilePath)
+	coverProfileBytes, err := os.ReadFile(coverprofilePath)
 	require.NoError(t, err)
 	require.Contains(t, string(coverProfileBytes), "mode:")
 }
@@ -52,7 +53,7 @@ func Test_TestCmd_impl_xmlcovWithoutCoverprofile(t *testing.T) {
 	junitPath := filepath.Join(outDir, "junit.xml")
 	xmlcovPath := filepath.Join(outDir, "lang-go-cobertura.xml")
 	tested := testCmd{
-		out:    ioutil.Discard,
+		out:    io.Discard,
 		junit:  junitPath,
 		xmlcov: xmlcovPath,
 	}
@@ -60,10 +61,10 @@ func Test_TestCmd_impl_xmlcovWithoutCoverprofile(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the files were generated.
-	junitBytes, err := ioutil.ReadFile(junitPath)
+	junitBytes, err := os.ReadFile(junitPath)
 	require.NoError(t, err)
 	require.Contains(t, string(junitBytes), "\"Test_Library\"")
-	xmlcovBytes, err := ioutil.ReadFile(xmlcovPath)
+	xmlcovBytes, err := os.ReadFile(xmlcovPath)
 	require.NoError(t, err)
 	require.Contains(t, string(xmlcovBytes), "\"library/library.go\"")
 }
@@ -72,7 +73,7 @@ func Test_TestCmd_impl_noArgs(t *testing.T) {
 	popd := pushd(t, "testdata", "go-library")
 	defer popd()
 
-	tested := testCmd{out: ioutil.Discard}
+	tested := testCmd{out: io.Discard}
 	err := tested.impl()
 	require.NoError(t, err)
 }
@@ -82,7 +83,7 @@ func Test_TestCmd_impl_noTests(t *testing.T) {
 	defer popd()
 
 	tested := testCmd{
-		out:           ioutil.Discard,
+		out:           io.Discard,
 		minCovPercent: 51,
 	}
 	err := tested.impl()
@@ -95,7 +96,7 @@ func Test_TestCmd_impl_sufficientCoverage(t *testing.T) {
 	defer popd()
 
 	tested := testCmd{
-		out:           ioutil.Discard,
+		out:           io.Discard,
 		minCovPercent: 5, // 50% is sufficient because generated.go is excluded
 	}
 	err := tested.impl()
@@ -107,7 +108,7 @@ func Test_TestCmd_impl_insufficientCoverage(t *testing.T) {
 	defer popd()
 
 	tested := testCmd{
-		out:           ioutil.Discard,
+		out:           io.Discard,
 		minCovPercent: 51,
 	}
 	err := tested.impl()
@@ -132,7 +133,7 @@ func Test_TestCmd_impl_outputsStillWrittenWhenTestsFail(t *testing.T) {
 	xmlcovPath := filepath.Join(outDir, "lang-go-cobertura.xml")
 	coverprofilePath := filepath.Join(outDir, "cover.out")
 	tested := testCmd{
-		out:          ioutil.Discard,
+		out:          io.Discard,
 		junit:        junitPath,
 		xmlcov:       xmlcovPath,
 		coverprofile: coverprofilePath,
@@ -141,13 +142,13 @@ func Test_TestCmd_impl_outputsStillWrittenWhenTestsFail(t *testing.T) {
 	require.Error(t, err)
 
 	// Check that the files were generated (even when the tests failed).
-	junitBytes, err := ioutil.ReadFile(junitPath)
+	junitBytes, err := os.ReadFile(junitPath)
 	require.NoError(t, err)
 	require.Contains(t, string(junitBytes), "\"Test_Library\"")
-	xmlcovBytes, err := ioutil.ReadFile(xmlcovPath)
+	xmlcovBytes, err := os.ReadFile(xmlcovPath)
 	require.NoError(t, err)
 	require.Contains(t, string(xmlcovBytes), "\"library/library.go\"")
-	coverProfileBytes, err := ioutil.ReadFile(coverprofilePath)
+	coverProfileBytes, err := os.ReadFile(coverprofilePath)
 	require.NoError(t, err)
 	require.Contains(t, string(coverProfileBytes), "mode:")
 }
