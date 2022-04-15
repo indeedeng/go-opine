@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/google/subcommands v1.2.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.1
 	golang.org/x/tools v0.0.0-20200116004258-96555e0fa59c
 )
 

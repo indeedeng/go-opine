@@ -83,7 +83,7 @@ func (t *testCmd) impl() error {
 	covPkgsOut, _, err := run.Cmd(
 		"go",
 		run.Args("list", "-f", "{{ if .GoFiles }}{{ .ImportPath }}{{ end }}", "./..."),
-		run.Log(io.Discard),
+		run.Log(os.Stderr),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to list Go packages: %w", err)
