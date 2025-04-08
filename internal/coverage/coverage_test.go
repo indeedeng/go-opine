@@ -3,7 +3,6 @@ package coverage
 import (
 	"bufio"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +42,7 @@ func Test_CoverProfile(t *testing.T) {
 	profiles, err := cover.ParseProfiles(inPath)
 	require.NoError(t, err)
 
-	outDir, err := ioutil.TempDir("", "go-opine-coverage-test.")
+	outDir, err := os.MkdirTemp("", "go-opine-coverage-test.")
 	require.NoError(t, err)
 	defer os.RemoveAll(outDir)
 	outPath := filepath.Join(outDir, "cover.out")
@@ -64,7 +63,7 @@ func Test_XML(t *testing.T) {
 	profiles, err := cover.ParseProfiles(inPath)
 	require.NoError(t, err)
 
-	outDir, err := ioutil.TempDir("", "go-opine-coverage-test.")
+	outDir, err := os.MkdirTemp("", "go-opine-coverage-test.")
 	require.NoError(t, err)
 	defer os.RemoveAll(outDir)
 	outPath := filepath.Join(outDir, "lang-go-cobertura.xml")

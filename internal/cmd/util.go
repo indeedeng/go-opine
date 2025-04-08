@@ -3,7 +3,7 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/google/subcommands"
 )
@@ -43,7 +43,7 @@ func ensureNoArgs(f *flag.FlagSet) bool {
 
 // closedTempFile creates a temp file, closes it, and returns the file path.
 func closedTempFile(dir, pattern string) (string, error) {
-	tmpCov, err := ioutil.TempFile(dir, pattern)
+	tmpCov, err := os.CreateTemp(dir, pattern)
 	if err != nil {
 		return "", err
 	}

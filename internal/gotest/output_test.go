@@ -30,7 +30,7 @@ ok  	oss.indeed.com/go/go-opine/internal/cmd	11.527s
 
 func Test_removeCoverageOutput_Accept_error(t *testing.T) {
 	expectedErr := errors.New("failed to parse")
-	tested := newRemoveCoverageOutput(resultAccepterFunc(func(res result) error { return expectedErr }))
+	tested := newRemoveCoverageOutput(resultAccepterFunc(func(result) error { return expectedErr }))
 	err := tested.Accept(result{})
 	require.Equal(t, expectedErr, err)
 }
@@ -125,6 +125,6 @@ type errorWriter struct {
 	err error
 }
 
-func (e *errorWriter) Write(p []byte) (int, error) {
+func (e *errorWriter) Write([]byte) (int, error) {
 	return 0, e.err
 }

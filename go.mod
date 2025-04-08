@@ -1,11 +1,13 @@
 module oss.indeed.com/go/go-opine
 
-go 1.17
+go 1.23.0
+
+toolchain go1.23.1
 
 require (
 	github.com/google/subcommands v1.2.0
 	github.com/stretchr/testify v1.7.1
-	golang.org/x/tools v0.1.10
+	golang.org/x/tools v0.31.0
 )
 
 require (

@@ -28,23 +28,23 @@ type cmdinfo struct {
 // exit code is non-zero.
 //
 // By default Cmd will write the following to os.Stdout:
-//   * A message before running the command that indicates the command that
+//   - A message before running the command that indicates the command that
 //     will be run, including the args.
-//   * The stdout of the command. Each line will be prefixed with "  > ". Note
+//   - The stdout of the command. Each line will be prefixed with "  > ". Note
 //     that the returned stdout will not have this prefix.
-//   * The stderr of the command. Each line will be prefixed with "  ! ". Note
+//   - The stderr of the command. Each line will be prefixed with "  ! ". Note
 //     that the returned stderr will not have this prefix.
-//   * A message when the command completes indicating whether it completed
+//   - A message when the command completes indicating whether it completed
 //     successfully or not, and what exit code it returned in the case of a
 //     failure.
 //
 // The above output can be configured as follows:
-//   * Use Log to change the output destination (from os.Stdout) to the
+//   - Use Log to change the output destination (from os.Stdout) to the
 //     provided io.Writer. Use io.Discard if you do not want anything
 //     printed.
-//   * Use SuppressStdout to prevent the stdout from being written. It will
+//   - Use SuppressStdout to prevent the stdout from being written. It will
 //     still be returned.
-//   * Use SuppressStderr to prevent the stderr from being written. It will
+//   - Use SuppressStderr to prevent the stderr from being written. It will
 //     still be returned.
 func Cmd(command string, args []string, opts ...Option) (string, string, error) {
 	sp := cmdinfo{
@@ -88,12 +88,12 @@ func Cmd(command string, args []string, opts ...Option) (string, string, error) 
 // Args returns the provided variadic args as a slice. This allows
 // you to use Cmd like this:
 //
-//     run.Cmd("echo", run.Args("hello", "world"))
+//	run.Cmd("echo", run.Args("hello", "world"))
 //
 // The above is arguably slightly more readable than using a []string
 // directly:
 //
-//     run.Cmd("echo", []string{"hello", "world"})
+//	run.Cmd("echo", []string{"hello", "world"})
 func Args(args ...string) []string {
 	return args
 }

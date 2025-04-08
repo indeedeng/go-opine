@@ -28,16 +28,12 @@ linters-settings:
         sizeThreshold: 512
   gocyclo:
     min-complexity: 16
-  golint:
-    min-confidence: 0
-  govet:
-    check-shadowing: false
   lll:
     line-length: 300
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
+  revive:
+    min-confidence: 0
 
 issues:
   exclude-rules:
@@ -50,40 +46,33 @@ linters:
   enable:
     - asciicheck
     - bodyclose
-    - deadcode
-    - depguard
+    - copyloopvar
     - dogsled
     - dupl
     - errcheck
     - exhaustive
-    - exportloopref
     - gochecknoinits
     - goconst
     - gocritic
     - godot
     - gofmt
-    - golint
     - goprintffuncname
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - interfacer
     - lll
-    - maligned
     - misspell
     - nakedret
     - nolintlint
     - prealloc
+    - revive
     - rowserrcheck
-    - scopelint
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace

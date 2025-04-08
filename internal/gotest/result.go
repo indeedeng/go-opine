@@ -132,10 +132,10 @@ func (a *resultAggregator) setErr(err error) {
 // immediately it will cause confusion regarding which package each test
 // is in. For example take the following output:
 //
-//     === RUN   Test_Cmd_optionLog
-//     --- PASS: Test_Cmd_optionLog (0.01s)
-//     PASS
-//     ok  	oss.indeed.com/go/go-opine/internal/run	(cached)
+//	=== RUN   Test_Cmd_optionLog
+//	--- PASS: Test_Cmd_optionLog (0.01s)
+//	PASS
+//	ok  	oss.indeed.com/go/go-opine/internal/run	(cached)
 //
 // The only way you can tell the Test_Cmd_optionLog package is
 // oss.indeed.com/go/go-opine/internal/run is by the fact that the package
