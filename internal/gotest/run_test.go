@@ -2,7 +2,6 @@ package gotest
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -31,7 +30,7 @@ func Test_Run_allOptions(t *testing.T) {
 	popd := pushd(t, "testdata")
 	defer popd()
 
-	f, err := ioutil.TempFile("", "go-opine-gotest.")
+	f, err := os.CreateTemp("", "go-opine-gotest.")
 	require.NoError(t, err)
 	covPath := f.Name()
 	require.NoError(t, f.Close())
@@ -77,19 +76,19 @@ func Test_Run_fail(t *testing.T) {
 }
 
 func Test_parseGoTestJSONOutput_parseError(t *testing.T) {
-	err := parseGoTestJSONOutput(strings.NewReader("NOT JSON!"), resultAccepterFunc(func(res result) error { return nil }))
+	err := parseGoTestJSONOutput(strings.NewReader("NOT JSON!"), resultAccepterFunc(func(result) error { return nil }))
 	require.Error(t, err)
 }
 
 func Test_parseGoTestJSONOutput_unconsumedEvents(t *testing.T) {
 	const eventJSON = `{"Time":"2019-09-26T13:27:17.563229183Z","Action":"output","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Output":"--- PASS: Test_testCmd_impl (1.93s)\n"}`
-	err := parseGoTestJSONOutput(strings.NewReader(eventJSON), resultAccepterFunc(func(res result) error { return nil }))
+	err := parseGoTestJSONOutput(strings.NewReader(eventJSON), resultAccepterFunc(func(result) error { return nil }))
 	require.Error(t, err)
 }
 
 func Test_parseGoTestJSONOutput_unconsumedResults(t *testing.T) {
 	const eventJSON = `{"Time":"2019-09-26T13:27:17.56324465Z","Action":"pass","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Elapsed":1.93}`
-	err := parseGoTestJSONOutput(strings.NewReader(eventJSON), resultAccepterFunc(func(res result) error { return nil }))
+	err := parseGoTestJSONOutput(strings.NewReader(eventJSON), resultAccepterFunc(func(result) error { return nil }))
 	require.Error(t, err)
 }
 

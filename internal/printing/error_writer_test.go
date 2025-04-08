@@ -10,6 +10,6 @@ type errorWriter struct {
 }
 
 // Always returns n bytes written and errorWriterErr.
-func (f errorWriter) Write(p []byte) (int, error) {
+func (f errorWriter) Write([]byte) (int, error) {
 	return f.n, errorWriterErr
 }

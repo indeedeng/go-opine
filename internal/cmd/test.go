@@ -67,6 +67,7 @@ func (t *testCmd) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&t.norace, "norace", false, "compile tests with race detector disabled")
 }
 
+//revive:disable:unused-parameter
 func (t *testCmd) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
 	return executeNoArgs(f, t.impl)
 }

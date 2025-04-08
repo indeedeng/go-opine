@@ -1,7 +1,6 @@
 package junit
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,7 +11,7 @@ import (
 )
 
 func Test_Write(t *testing.T) {
-	outDir, err := ioutil.TempDir("", "go-opine-junit-test.")
+	outDir, err := os.MkdirTemp("", "go-opine-junit-test.")
 	require.NoError(t, err)
 	defer os.RemoveAll(outDir)
 	goTestOutput, _, err := run.Cmd("go", run.Args("test", "-v", "./testdata"))

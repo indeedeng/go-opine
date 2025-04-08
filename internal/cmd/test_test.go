@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,7 +13,7 @@ func Test_TestCmd_impl(t *testing.T) {
 	popd := pushd(t, "testdata", "go-library")
 	defer popd()
 
-	outDir, err := ioutil.TempDir("", "go-opine-cmd-test.")
+	outDir, err := os.MkdirTemp("", "go-opine-cmd-test.")
 	require.NoError(t, err)
 	defer os.RemoveAll(outDir)
 
@@ -46,7 +45,7 @@ func Test_TestCmd_impl_xmlcovWithoutCoverprofile(t *testing.T) {
 	popd := pushd(t, "testdata", "go-library")
 	defer popd()
 
-	outDir, err := ioutil.TempDir("", "go-opine-cmd-test.")
+	outDir, err := os.MkdirTemp("", "go-opine-cmd-test.")
 	require.NoError(t, err)
 	defer os.RemoveAll(outDir)
 
@@ -120,7 +119,7 @@ func Test_TestCmd_impl_outputsStillWrittenWhenTestsFail(t *testing.T) {
 	popd := pushd(t, "testdata", "go-library")
 	defer popd()
 
-	outDir, err := ioutil.TempDir("", "go-opine-cmd-test.")
+	outDir, err := os.MkdirTemp("", "go-opine-cmd-test.")
 	require.NoError(t, err)
 	defer os.RemoveAll(outDir)
 

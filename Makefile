@@ -12,14 +12,14 @@ deps: ## download go modules
 
 .PHONY: fmt
 fmt: ## ensure consistent code style
-	go run oss.indeed.com/go/go-groups@v1.1.2 -w .
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2 run --fix > /dev/null 2>&1 || true
+	go run oss.indeed.com/go/go-groups@v1.1.3 -w .
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 run --fix > /dev/null 2>&1 || true
 	go mod tidy
 
 .PHONY: lint
 lint:
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2 run
-	@if [ -n "$$(go run oss.indeed.com/go/go-groups@v1.1.2 -l .)" ]; then \
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 run
+	@if [ -n "$$(go run oss.indeed.com/go/go-groups@v1.1.3 -l .)" ]; then \
 		echo -e "\033[0;33mdetected fmt problems: run \`\033[0;32mmake fmt\033[0m\033[0;33m\`\033[0m"; \
 		exit 1; \
 	fi

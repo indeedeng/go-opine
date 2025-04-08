@@ -36,7 +36,7 @@ FAIL	example.com	3.452s
 			{
 				Key:     resultKey{Package: issueRes.Key.Package},
 				Outcome: issueRes.Outcome,
-				Output: "FAIL	example.com	3.452s\n",
+				Output:  "FAIL	example.com	3.452s\n",
 				Elapsed: 3452 * time.Millisecond,
 			},
 		},

@@ -26,8 +26,8 @@ func Test_resultAccepter_Accept(t *testing.T) {
 func Test_resultAccepter_Accept_error(t *testing.T) {
 	expectedErr := errors.New("fail boat")
 	tested := newMultiResultAccepter(
-		resultAccepterFunc(func(res result) error { return expectedErr }),
-		resultAccepterFunc(func(res result) error { require.Fail(t, "should not be called"); return nil }),
+		resultAccepterFunc(func(result) error { return expectedErr }),
+		resultAccepterFunc(func(result) error { require.Fail(t, "should not be called"); return nil }),
 	)
 	require.Equal(t, expectedErr, tested.Accept(result{}))
 }
@@ -137,7 +137,7 @@ func Test_resultAggregator_Accept(t *testing.T) {
 			event{
 				Action:  "pass",
 				Package: "indeed.com/some/other/pkg",
-				Output: "ok  	indeed.com/some/other/pkg	0.091s\n",
+				Output:  "ok  	indeed.com/some/other/pkg	0.091s\n",
 				Elapsed: 0.43,
 			},
 		),
@@ -150,7 +150,7 @@ func Test_resultAggregator_Accept(t *testing.T) {
 					Package: "indeed.com/some/other/pkg",
 				},
 				Outcome: "pass",
-				Output: "ok  	indeed.com/some/other/pkg	0.091s\n",
+				Output:  "ok  	indeed.com/some/other/pkg	0.091s\n",
 				Elapsed: 430 * time.Millisecond,
 			},
 		},
@@ -165,7 +165,7 @@ func Test_resultAggregator_Accept(t *testing.T) {
 			event{
 				Action:  "skip",
 				Package: "indeed.com/some/skipped/pkg",
-				Output: "?   	oss.indeed.com/go/go-opine	[no test files]\n",
+				Output:  "?   	oss.indeed.com/go/go-opine	[no test files]\n",
 				Elapsed: 0,
 			},
 		),
@@ -178,7 +178,7 @@ func Test_resultAggregator_Accept(t *testing.T) {
 					Package: "indeed.com/some/skipped/pkg",
 				},
 				Outcome: "skip",
-				Output: "?   	oss.indeed.com/go/go-opine	[no test files]\n",
+				Output:  "?   	oss.indeed.com/go/go-opine	[no test files]\n",
 			},
 		},
 		results,
@@ -222,7 +222,7 @@ func Test_resultAggregator_Accept(t *testing.T) {
 			event{
 				Action:  "fail",
 				Package: "indeed.com/some/pkg",
-				Output: "FAIL	indeed.com/some/pkg	4.321s\n",
+				Output:  "FAIL	indeed.com/some/pkg	4.321s\n",
 				Elapsed: 4.321,
 			},
 		),
@@ -235,7 +235,7 @@ func Test_resultAggregator_Accept(t *testing.T) {
 					Package: "indeed.com/some/pkg",
 				},
 				Outcome: "fail",
-				Output: "FAIL	indeed.com/some/pkg	4.321s\n",
+				Output:  "FAIL	indeed.com/some/pkg	4.321s\n",
 				Elapsed: 4321 * time.Millisecond,
 			},
 		},
@@ -250,7 +250,7 @@ func Test_resultAggregator_Accept_error(t *testing.T) {
 	expectedErr := errors.New("fail boat")
 	called := false
 	tested := newResultAggregator(
-		resultAccepterFunc(func(res result) error { require.False(t, called); called = true; return expectedErr }),
+		resultAccepterFunc(func(result) error { require.False(t, called); called = true; return expectedErr }),
 	)
 	require.Equal(t, expectedErr, tested.Accept(event{Action: "pass"}))
 	require.Equal(t, expectedErr, errors.Unwrap(tested.Accept(event{Action: "pass"})))
@@ -258,7 +258,7 @@ func Test_resultAggregator_Accept_error(t *testing.T) {
 }
 
 func Test_resultAggregator_CheckAllEventsConsumed_unconsumedEvents(t *testing.T) {
-	tested := newResultAggregator(resultAccepterFunc(func(res result) error { return nil }))
+	tested := newResultAggregator(resultAccepterFunc(func(result) error { return nil }))
 	require.NoError(t, tested.Accept(event{Package: "BLAH"}))
 	require.Error(t, tested.CheckAllEventsConsumed())
 }
@@ -429,7 +429,7 @@ func Test_resultPackageGrouper_Accept_error(t *testing.T) {
 	expectedErr := errors.New("fail boat")
 	called := false
 	tested := newResultPackageGrouper(
-		resultAccepterFunc(func(res result) error { require.False(t, called); called = true; return expectedErr }),
+		resultAccepterFunc(func(result) error { require.False(t, called); called = true; return expectedErr }),
 	)
 	require.Equal(t, expectedErr, tested.Accept(result{}))
 	require.Equal(t, expectedErr, errors.Unwrap(tested.Accept(result{})))
@@ -437,7 +437,7 @@ func Test_resultPackageGrouper_Accept_error(t *testing.T) {
 }
 
 func Test_resultPackageGrouper_CheckAllResultsConsumed_incompletePackages(t *testing.T) {
-	tested := newResultPackageGrouper(resultAccepterFunc(func(res result) error { return nil }))
+	tested := newResultPackageGrouper(resultAccepterFunc(func(result) error { return nil }))
 	require.NoError(t, tested.Accept(result{Key: resultKey{Package: "MyPackage", Test: "MyTest"}}))
 	require.Error(t, tested.CheckAllResultsConsumed())
 }
