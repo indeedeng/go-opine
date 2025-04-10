@@ -55,15 +55,21 @@ func (m multiResultAccepter) Accept(res result) error {
 // test or package into results. Completed results are passed to the
 // resultAccepter.
 type resultAggregator struct {
-	to     resultAccepter
-	events map[resultKey][]event
-	err    error
+	to              resultAccepter
+	eventsByPackage map[string]*packageEvents
+	err             error
+}
+
+type packageEvents struct {
+	eventsByTest map[string][]event
+	events       []event
+	latestEvent  time.Time
 }
 
 func newResultAggregator(to resultAccepter) *resultAggregator {
 	return &resultAggregator{
-		to:     to,
-		events: make(map[resultKey][]event),
+		to:              to,
+		eventsByPackage: make(map[string]*packageEvents),
 	}
 }
 
@@ -78,50 +84,141 @@ func (a *resultAggregator) Accept(e event) error {
 		return fmt.Errorf("permanent error state: %w", a.err)
 	}
 
-	rk := resultKey{
-		Package: e.Package,
-		Test:    e.Test,
+	if _, packageKnown := a.eventsByPackage[e.Package]; !packageKnown {
+		a.eventsByPackage[e.Package] = &packageEvents{
+			eventsByTest: make(map[string][]event),
+		}
+	}
+	packageEvents := a.eventsByPackage[e.Package]
+
+	if packageEvents.latestEvent.IsZero() || e.Time.After(packageEvents.latestEvent) {
+		packageEvents.latestEvent = e.Time
 	}
 
-	if !isTestOrPackageComplete(e.Action) {
-		a.events[rk] = append(a.events[rk], e)
+	if e.Test == "" {
+		packageEvents.events = append(packageEvents.events, e)
+		if actionComplete(e.Action) {
+			return a.permanentError(a.packageComplete(e.Package))
+		}
 		return nil
 	}
 
-	var output strings.Builder
-	for _, prevEvent := range a.events[rk] {
-		output.WriteString(prevEvent.Output)
-	}
-	delete(a.events, rk)
-	output.WriteString(e.Output)
-
-	res := result{
-		Key:     rk,
-		Outcome: e.Action,
-		Output:  output.String(),
-		Elapsed: time.Duration(e.Elapsed * float64(time.Second)),
-	}
-	if err := a.to.Accept(res); err != nil {
-		a.setErr(err)
-		return a.err
+	packageEvents.eventsByTest[e.Test] = append(packageEvents.eventsByTest[e.Test], e)
+	if actionComplete(e.Action) {
+		return a.permanentError(a.testComplete(e.Package, e.Test))
 	}
 
 	return nil
 }
 
-// CheckAllEventsConsumed checks that all events are consumed and that
-// no error occurred in any Accept.
-func (a *resultAggregator) CheckAllEventsConsumed() error {
-	if a.err == nil && len(a.events) > 0 {
-		a.setErr(errors.New("not all events were consumed"))
+// NoMoreEvents notifies the aggregator no more events will be
+// submitted via Accept. Generates synthetic results for tests/packages
+// it did not see a final event for.
+func (a *resultAggregator) NoMoreEvents() error {
+	if a.err != nil {
+		return a.err
 	}
-	return a.err
+
+	for p := range a.eventsByPackage {
+		err := a.packageComplete(p)
+		if err != nil {
+			return a.permanentError(err)
+		}
+	}
+
+	return nil
 }
 
-// setErr puts the resultAggregator into a permanent error state.
-func (a *resultAggregator) setErr(err error) {
-	a.err = err
-	a.events = nil
+func (a *resultAggregator) packageComplete(packageName string) error {
+	packageEvents := a.eventsByPackage[packageName]
+	for t := range packageEvents.eventsByTest {
+		err := a.testComplete(packageName, t)
+		if err != nil {
+			return err
+		}
+	}
+
+	delete(a.eventsByPackage, packageName)
+
+	return a.to.Accept(renderResultImpl(packageName, "", packageEvents.events, packageEvents.latestEvent))
+}
+
+func (a *resultAggregator) testComplete(packageName, testName string) error {
+	packageEvents := a.eventsByPackage[packageName]
+	testEvents := packageEvents.eventsByTest[testName]
+
+	delete(packageEvents.eventsByTest, testName)
+
+	return a.to.Accept(renderResultImpl(packageName, testName, testEvents, time.Time{}))
+}
+
+// permanentError puts the resultAggregator into a permanent error state.
+func (a *resultAggregator) permanentError(err error) error {
+	if err != nil {
+		a.err = err
+		a.eventsByPackage = nil
+	}
+	return err
+}
+
+func renderResultImpl(
+	packageName string,
+	testName string,
+	events []event,
+	latestPackageEvent time.Time,
+) result {
+	var firstEventTime time.Time
+	var lastEventTime time.Time
+	var output strings.Builder
+	for _, e := range events {
+		if firstEventTime.IsZero() || e.Time.Before(firstEventTime) {
+			firstEventTime = e.Time
+		}
+		if lastEventTime.IsZero() || e.Time.After(lastEventTime) {
+			lastEventTime = e.Time
+		}
+		_, _ = output.WriteString(e.Output)
+	}
+
+	synthetic := true
+	outcome := testFailure
+	elapsed := lastEventTime.Sub(firstEventTime)
+	if len(events) != 0 {
+		lastEvent := events[len(events)-1]
+		if actionComplete(lastEvent.Action) {
+			synthetic = false
+			outcome = lastEvent.Action
+			if lastEvent.Elapsed > 0 {
+				elapsed = time.Duration(lastEvent.Elapsed * float64(time.Second))
+			}
+		}
+	}
+
+	if synthetic {
+		// mimicking go test's output
+		if testName == "" {
+			elapsed = latestPackageEvent.Sub(firstEventTime)
+			_, _ = output.WriteString("FAIL\n")
+			_, _ = output.WriteString("FAIL\t")
+			_, _ = output.WriteString(packageName)
+			_, _ = output.WriteString("\t")
+			_, _ = output.WriteString(fmt.Sprintf("%.02f", elapsed.Seconds()))
+			_, _ = output.WriteString("s\n")
+		} else {
+			_, _ = output.WriteString("--- FAIL: ")
+			_, _ = output.WriteString(testName)
+			_, _ = output.WriteString(" (")
+			_, _ = output.WriteString(fmt.Sprintf("%.02f", elapsed.Seconds()))
+			_, _ = output.WriteString("s)\n")
+		}
+	}
+
+	return result{
+		Key:     resultKey{Package: packageName, Test: testName},
+		Outcome: outcome,
+		Output:  output.String(),
+		Elapsed: elapsed,
+	}
 }
 
 // resultPackageGrouper accepts results, groups them by package, and
@@ -176,7 +273,7 @@ func (r *resultPackageGrouper) Accept(res result) error {
 
 	r.pkgResults[res.Key.Package] = append(r.pkgResults[res.Key.Package], res)
 
-	if !isPackageComplete(res) {
+	if res.Key.Test != "" {
 		return nil
 	}
 
@@ -188,7 +285,7 @@ func (r *resultPackageGrouper) Accept(res result) error {
 	return nil
 }
 
-// CheckAllEventsConsumed checks that all results are consumed and that
+// CheckAllResultsConsumed checks that all results are consumed and that
 // no error occurred in any Accept.
 func (r *resultPackageGrouper) CheckAllResultsConsumed() error {
 	if r.err == nil && len(r.pkgResults) > 0 {
@@ -217,14 +314,8 @@ func (r *resultPackageGrouper) setErr(err error) {
 	r.pkgResults = nil
 }
 
-// isTestOrPackageComplete returns true iff the provided event.Action
+// actionComplete returns true iff the provided event.Action
 // represents the completion of test or package.
-func isTestOrPackageComplete(action string) bool {
+func actionComplete(action string) bool {
 	return action == "pass" || action == "fail" || action == "skip"
-}
-
-// isPackageComplete returns true iff the provided result represents
-// the completion of a package.
-func isPackageComplete(res result) bool {
-	return res.Key.Test == ""
 }

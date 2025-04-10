@@ -142,7 +142,7 @@ func parseGoTestJSONOutput(r io.Reader, to resultAccepter) error {
 	if err := parser.Parse(r); err != nil {
 		return err
 	}
-	if err := aggregator.CheckAllEventsConsumed(); err != nil {
+	if err := aggregator.NoMoreEvents(); err != nil {
 		return err
 	}
 	if err := grouper.CheckAllResultsConsumed(); err != nil {

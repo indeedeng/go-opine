@@ -80,18 +80,6 @@ func Test_parseGoTestJSONOutput_parseError(t *testing.T) {
 	require.Error(t, err)
 }
 
-func Test_parseGoTestJSONOutput_unconsumedEvents(t *testing.T) {
-	const eventJSON = `{"Time":"2019-09-26T13:27:17.563229183Z","Action":"output","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Output":"--- PASS: Test_testCmd_impl (1.93s)\n"}`
-	err := parseGoTestJSONOutput(strings.NewReader(eventJSON), resultAccepterFunc(func(result) error { return nil }))
-	require.Error(t, err)
-}
-
-func Test_parseGoTestJSONOutput_unconsumedResults(t *testing.T) {
-	const eventJSON = `{"Time":"2019-09-26T13:27:17.56324465Z","Action":"pass","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Elapsed":1.93}`
-	err := parseGoTestJSONOutput(strings.NewReader(eventJSON), resultAccepterFunc(func(result) error { return nil }))
-	require.Error(t, err)
-}
-
 func pushd(t *testing.T, path string) func() {
 	prev, err := os.Getwd()
 	require.NoError(t, err)

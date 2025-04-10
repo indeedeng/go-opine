@@ -243,7 +243,7 @@ func Test_resultAggregator_Accept(t *testing.T) {
 	)
 	results = nil
 
-	require.NoError(t, tested.CheckAllEventsConsumed())
+	require.NoError(t, tested.NoMoreEvents())
 }
 
 func Test_resultAggregator_Accept_error(t *testing.T) {
@@ -254,13 +254,54 @@ func Test_resultAggregator_Accept_error(t *testing.T) {
 	)
 	require.Equal(t, expectedErr, tested.Accept(event{Action: "pass"}))
 	require.Equal(t, expectedErr, errors.Unwrap(tested.Accept(event{Action: "pass"})))
-	require.Equal(t, expectedErr, tested.CheckAllEventsConsumed())
+	require.Equal(t, expectedErr, tested.NoMoreEvents())
 }
 
-func Test_resultAggregator_CheckAllEventsConsumed_unconsumedEvents(t *testing.T) {
-	tested := newResultAggregator(resultAccepterFunc(func(result) error { return nil }))
-	require.NoError(t, tested.Accept(event{Package: "BLAH"}))
-	require.Error(t, tested.CheckAllEventsConsumed())
+func Test_resultAggregator_NoMoreEvents_synthesizesEvents(t *testing.T) {
+	var results []result
+	aggregator := newResultAggregator(resultAccepterFunc(func(res result) error {
+		results = append(results, res)
+		return nil
+	}))
+
+	const (
+		packageName = "a-package-name"
+		testName    = "a-test-name"
+	)
+
+	firstEventTime := time.Date(1997, 8, 29, 0, 0, 0, 0, time.UTC)
+	require.NoError(t, aggregator.Accept(event{
+		Package: packageName,
+		Time:    firstEventTime,
+	}))
+
+	secondEventTime := firstEventTime.Add(42 * time.Nanosecond)
+	require.NoError(t, aggregator.Accept(event{
+		Package: packageName,
+		Test:    testName,
+		Time:    secondEventTime,
+	}))
+
+	require.NoError(t, aggregator.NoMoreEvents())
+
+	require.Equal(
+		t,
+		[]result{
+			{
+				Key:     resultKey{Package: packageName, Test: testName},
+				Outcome: "fail",
+				Output:  "--- FAIL: " + testName + " (0.00s)\n",
+				Elapsed: 0,
+			},
+			{
+				Key:     resultKey{Package: packageName},
+				Outcome: "fail",
+				Output:  "FAIL\nFAIL\t" + packageName + "\t0.00s\n",
+				Elapsed: secondEventTime.Sub(firstEventTime),
+			},
+		},
+		results,
+	)
 }
 
 func Test_resultPackageGrouper_Accept_onePackageNoTests(t *testing.T) {
