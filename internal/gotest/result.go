@@ -11,6 +11,8 @@ import (
 type resultKey struct {
 	Package string
 	Test    string
+	// as of go 1.24 build output is categorized by ImportPath json events
+	ImportPath string
 }
 
 // result is a test result. The result is for either a single test or for
@@ -79,8 +81,9 @@ func (a *resultAggregator) Accept(e event) error {
 	}
 
 	rk := resultKey{
-		Package: e.Package,
-		Test:    e.Test,
+		Package:    e.Package,
+		Test:       e.Test,
+		ImportPath: e.ImportPath,
 	}
 
 	if !isTestOrPackageComplete(e.Action) {
@@ -113,7 +116,7 @@ func (a *resultAggregator) Accept(e event) error {
 // no error occurred in any Accept.
 func (a *resultAggregator) CheckAllEventsConsumed() error {
 	if a.err == nil && len(a.events) > 0 {
-		a.setErr(errors.New("not all events were consumed"))
+		a.setErr(fmt.Errorf("not all events were consumed: %#v", a.events))
 	}
 	return a.err
 }
@@ -220,7 +223,7 @@ func (r *resultPackageGrouper) setErr(err error) {
 // isTestOrPackageComplete returns true iff the provided event.Action
 // represents the completion of test or package.
 func isTestOrPackageComplete(action string) bool {
-	return action == "pass" || action == "fail" || action == "skip"
+	return action == "pass" || action == "fail" || action == "skip" || action == "build-fail"
 }
 
 // isPackageComplete returns true iff the provided result represents

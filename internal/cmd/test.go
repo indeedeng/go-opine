@@ -9,14 +9,12 @@ import (
 	"os"
 	"regexp"
 	"runtime"
-	"strings"
 
 	"github.com/google/subcommands"
 
 	"oss.indeed.com/go/go-opine/internal/coverage"
 	"oss.indeed.com/go/go-opine/internal/gotest"
 	"oss.indeed.com/go/go-opine/internal/junit"
-	"oss.indeed.com/go/go-opine/internal/run"
 )
 
 const (
@@ -78,25 +76,12 @@ func (t *testCmd) impl() error {
 		return fmt.Errorf("failed to create temporary file for coverprofile output: %w", err)
 	}
 
-	// Work around an issue (https://github.com/golang/go/issues/27333) where
-	// -coverpkg=./... will fail if there are any packages that have only test
-	// files.
-	covPkgsOut, _, err := run.Cmd(
-		"go",
-		run.Args("list", "-f", "{{ if .GoFiles }}{{ .ImportPath }}{{ end }}", "./..."),
-		run.Log(os.Stderr),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to list Go packages: %w", err)
-	}
-	covPkgs := strings.Join(strings.Fields(covPkgsOut), ",")
-
 	var errs []error
 	var testOutBuf bytes.Buffer
 	options := []gotest.Option{
 		gotest.Race(),
 		gotest.CoverProfile(covPath),
-		gotest.CoverPkg(covPkgs),
+		gotest.CoverPkg("./..."),
 		gotest.CoverMode("atomic"),
 		gotest.P(runtime.GOMAXPROCS(0)),
 		gotest.QuietOutput(t.out),
