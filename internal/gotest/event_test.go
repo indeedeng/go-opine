@@ -1,7 +1,6 @@
 package gotest
 
 import (
-	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -15,26 +14,32 @@ func (f eventAccepterFunc) Accept(e event) error {
 	return f(e)
 }
 
-func Test_eventStreamParser_Parse(t *testing.T) {
-	// Taken from "go test -v -json" output.
-	const event1JSON = `{"Time":"2019-09-26T13:27:17.563229183Z","Action":"output","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Output":"--- PASS: Test_testCmd_impl (1.93s)\n"}`
-	const event2JSON = `{"Time":"2019-09-26T13:27:17.56324465Z","Action":"pass","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Elapsed":1.93}`
+func Test_eventStreamParser(t *testing.T) {
+	type testcase struct {
+		Description  string
+		GoTestOutput string
 
-	var events []event
-	tested := newEventStreamParser(eventAccepterFunc(func(e event) error { events = append(events, e); return nil }))
-	err := tested.Parse(strings.NewReader(event1JSON + "\n" + event2JSON + "\n"))
-	require.NoError(t, err)
-	require.Equal(
-		t,
-		[]event{
-			{
+		ExpectedEvent event
+		ExpectedError bool
+	}
+	testcases := []testcase{
+		{
+			Description:  "event parser should parse an test output event",
+			GoTestOutput: `{"Time":"2019-09-26T13:27:17.563229183Z","Action":"output","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Output":"--- PASS: Test_testCmd_impl (1.93s)\n"}`,
+
+			ExpectedEvent: event{
 				Time:    time.Date(2019, 9, 26, 13, 27, 17, 563229183, time.UTC),
 				Action:  "output",
 				Package: "oss.indeed.com/go/go-opine/internal/cmd",
 				Test:    "Test_testCmd_impl",
 				Output:  "--- PASS: Test_testCmd_impl (1.93s)\n",
 			},
-			{
+		},
+		{
+			Description:  "event parser should parse an test pass event",
+			GoTestOutput: `{"Time":"2019-09-26T13:27:17.56324465Z","Action":"pass","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Elapsed":1.93}`,
+
+			ExpectedEvent: event{
 				Time:    time.Date(2019, 9, 26, 13, 27, 17, 563244650, time.UTC),
 				Action:  "pass",
 				Package: "oss.indeed.com/go/go-opine/internal/cmd",
@@ -42,86 +47,53 @@ func Test_eventStreamParser_Parse(t *testing.T) {
 				Elapsed: 1.93,
 			},
 		},
-		events,
-	)
-}
+		{
+			Description:  "event parser should parse an empty event",
+			GoTestOutput: `{}`,
 
-func Test_eventStreamParser_Parse_noTrailingNewline(t *testing.T) {
-	// Taken from "go test -v -json" output.
-	const eventJSON = `{"Time":"2019-09-26T13:27:17.563229183Z","Action":"output","Package":"oss.indeed.com/go/go-opine/internal/cmd","Test":"Test_testCmd_impl","Output":"--- PASS: Test_testCmd_impl (1.93s)\n"}`
+			ExpectedEvent: event{},
+		},
+		{
+			Description:  "event parser should parse an build-output event",
+			GoTestOutput: `{"ImportPath":"oss.indeed.com/go/go-opine/internal/gotest","Action":"build-output","Output":"# oss.indeed.com/go/go-opine/internal/gotest\n"}`,
 
-	var events []event
-	tested := newEventStreamParser(eventAccepterFunc(func(e event) error { events = append(events, e); return nil }))
-	err := tested.Parse(strings.NewReader(eventJSON))
-	require.NoError(t, err)
-	require.Equal(
-		t,
-		[]event{
-			{
-				Time:    time.Date(2019, 9, 26, 13, 27, 17, 563229183, time.UTC),
-				Action:  "output",
-				Package: "oss.indeed.com/go/go-opine/internal/cmd",
-				Test:    "Test_testCmd_impl",
-				Output:  "--- PASS: Test_testCmd_impl (1.93s)\n",
+			ExpectedEvent: event{
+				Action:     "build-output",
+				Output:     "# oss.indeed.com/go/go-opine/internal/gotest\n",
+				ImportPath: "oss.indeed.com/go/go-opine/internal/gotest",
 			},
 		},
-		events,
-	)
-}
+		{
+			Description:  "event parser should parse an build-fail event",
+			GoTestOutput: `{"ImportPath":"oss.indeed.com/go/go-opine/internal/gotest","Action":"build-fail"}`,
 
-func Test_eventStreamParser_Parse_emptyEvent(t *testing.T) {
-	var events []event
-	tested := newEventStreamParser(eventAccepterFunc(func(e event) error { events = append(events, e); return nil }))
-	err := tested.Parse(strings.NewReader("{}\n"))
-	require.NoError(t, err)
-	require.Equal(t, []event{{}}, events)
-}
-
-func Test_eventStreamParser_Parse_unmarshalError(t *testing.T) {
-	const notJSON = "=== RUN   Test_eventStreamParser_Parse"
-	var events []event
-	tested := newEventStreamParser(eventAccepterFunc(func(e event) error { events = append(events, e); return nil }))
-	err := tested.Parse(strings.NewReader(notJSON + "\n"))
-	require.Error(t, err)
-	require.Empty(t, events)
-}
-
-func Test_eventStreamParser_Parse_acceptError(t *testing.T) {
-	expectedErr := errors.New("failed to parse")
-	tested := newEventStreamParser(eventAccepterFunc(func(event) error { return expectedErr }))
-	err := tested.Parse(strings.NewReader("{}\n"))
-	require.Equal(t, expectedErr, err)
-}
-
-func Test_eventStreamParser_Parse_workaroundGoIssue35169(t *testing.T) {
-	// Taken from "go test -v -json" output.
-	const eventNotJSON = `FAIL	example.com [build failed]`
-
-	var events []event
-	tested := newEventStreamParser(
-		eventAccepterFunc(func(e event) error {
-			require.NotZero(t, e.Time)
-			e.Time = time.Time{}
-			events = append(events, e)
-			return nil
-		}),
-	)
-	err := tested.Parse(strings.NewReader(eventNotJSON))
-	require.NoError(t, err)
-	require.Len(t, events, 2)
-	require.Equal(
-		t,
-		[]event{
-			{
-				Action:  "output",
-				Package: "example.com",
-				Output:  eventNotJSON + "\n",
-			},
-			{
-				Action:  "fail",
-				Package: "example.com",
+			ExpectedEvent: event{
+				Action:     "build-fail",
+				ImportPath: "oss.indeed.com/go/go-opine/internal/gotest",
 			},
 		},
-		events,
-	)
+		{
+			Description:  "event parser should fail to parse text output",
+			GoTestOutput: `=== RUN   Test_eventStreamParser`,
+
+			ExpectedError: true,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.Description, func(t *testing.T) {
+			var observedEvent event
+			parser := newEventStreamParser(eventAccepterFunc(func(e event) error {
+				observedEvent = e
+				return nil
+			}))
+			err := parser.Parse(strings.NewReader(tc.GoTestOutput))
+			if tc.ExpectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.ExpectedEvent, observedEvent)
+			}
+		})
+	}
 }

@@ -76,7 +76,7 @@ func QuietOutput(to io.Writer) Option {
 	}
 }
 
-// QuietOutput writes output similar to "go test -v" to the
+// VerboseOutput writes output similar to "go test -v" to the
 // provided writer.
 func VerboseOutput(to io.Writer) Option {
 	return func(o *options) error {
@@ -137,7 +137,7 @@ func Run(opts ...Option) error {
 
 func parseGoTestJSONOutput(r io.Reader, to resultAccepter) error {
 	grouper := newResultPackageGrouper(to)
-	aggregator := newResultAggregator(newRemoveCoverageOutput(newWorkaroundGoIssue35180ResultAccepter(grouper)))
+	aggregator := newResultAggregator(newRemoveCoverageOutput(grouper))
 	parser := newEventStreamParser(aggregator)
 	if err := parser.Parse(r); err != nil {
 		return err
