@@ -1,7 +1,6 @@
 package gotest
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -195,7 +194,7 @@ func (r *resultPackageGrouper) Accept(res result) error {
 // no error occurred in any Accept.
 func (r *resultPackageGrouper) CheckAllResultsConsumed() error {
 	if r.err == nil && len(r.pkgResults) > 0 {
-		r.setErr(errors.New("not all results were consumed"))
+		r.setErr(fmt.Errorf("not all results were consumed: %#v", r.pkgResults))
 	}
 	return r.err
 }

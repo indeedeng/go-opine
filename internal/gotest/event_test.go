@@ -73,6 +73,15 @@ func Test_eventStreamParser(t *testing.T) {
 			},
 		},
 		{
+			Description:  "event parser should parse events with build-output warnings",
+			GoTestOutput: `{"ImportPath":"oss.indeed.com/test/datadogquery/resourcemetrics.test","Action":"build-output","Output":"# oss.indeed.com/test/datadogquery/resourcemetrics.test\nld: warning: '/private/var/folders/2y/4sct57296733gvqgbczv_x5w0000gn/T/go-link-1858153711/000055.o' has malformed LC_DYSYMTAB, expected 98 undefined symbols to start at index 1626, found 95 undefined symbols starting at index 1626\n"}`,
+			ExpectedEvent: event{
+				Action:     "build-output",
+				ImportPath: "oss.indeed.com/test/datadogquery/resourcemetrics.test",
+				Output:     "# oss.indeed.com/test/datadogquery/resourcemetrics.test\nld: warning: '/private/var/folders/2y/4sct57296733gvqgbczv_x5w0000gn/T/go-link-1858153711/000055.o' has malformed LC_DYSYMTAB, expected 98 undefined symbols to start at index 1626, found 95 undefined symbols starting at index 1626\n",
+			},
+		},
+		{
 			Description:  "event parser should fail to parse text output",
 			GoTestOutput: `=== RUN   Test_eventStreamParser`,
 
