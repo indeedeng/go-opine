@@ -59,8 +59,13 @@ func newQuietOutput(to io.Writer) *quietOutput {
 }
 
 func (q quietOutput) Accept(res result) error {
-	// Only print output from failed tests.
+	// Print output from failed tests.
 	if res.Key.Test != "" && res.Outcome == testFailure {
+		_, err := q.to.Write([]byte(res.Output))
+		return err
+	}
+	// Print output from build output
+	if res.Key.ImportPath != "" {
 		_, err := q.to.Write([]byte(res.Output))
 		return err
 	}

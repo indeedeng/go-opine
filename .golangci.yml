@@ -39,7 +39,7 @@ issues:
   exclude-rules:
     # Disable linters that are annoying in tests.
     - path: _test\.go
-      linters: [gosec]
+      linters: [gosec, lll]
 
 linters:
   disable-all: true

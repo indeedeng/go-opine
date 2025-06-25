@@ -80,6 +80,23 @@ func Test_quietOutput_Accept_printsFailingTests(t *testing.T) {
 	require.Equal(t, expectedOutput, output.String())
 }
 
+func Test_quietOutput_Accept_printsBuildWarnings(t *testing.T) {
+	const expectedOutput = "# oss.indeed.com/test/datadogquery/resourcemetrics.test\nld: warning: '/private/var/folders/2y/4sct57296733gvqgbczv_x5w0000gn/T/go-link-1858153711/000055.o' has malformed LC_DYSYMTAB, expected 98 undefined symbols to start at index 1626, found 95 undefined symbols starting at index 1626\n"
+	var output bytes.Buffer
+	tested := newQuietOutput(&output)
+	err := tested.Accept(
+		result{
+			Key: resultKey{
+				ImportPath: "oss.indeed.com/test/datadogquery/resourcemetrics.test",
+			},
+			Outcome: "build-output",
+			Output:  "# oss.indeed.com/test/datadogquery/resourcemetrics.test\nld: warning: '/private/var/folders/2y/4sct57296733gvqgbczv_x5w0000gn/T/go-link-1858153711/000055.o' has malformed LC_DYSYMTAB, expected 98 undefined symbols to start at index 1626, found 95 undefined symbols starting at index 1626\n",
+		},
+	)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput, output.String())
+}
+
 func Test_quietOutput_Accept_printsPassingPackagesWithPASSRemoved(t *testing.T) {
 	const outputBeforeRemovingPASS = `PASS
 ok  	oss.indeed.com/go/go-opine/internal/cmd	11.527s
