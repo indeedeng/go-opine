@@ -442,6 +442,86 @@ func Test_resultPackageGrouper_CheckAllResultsConsumed_incompletePackages(t *tes
 	require.Error(t, tested.CheckAllResultsConsumed())
 }
 
+func Test_filterBuildWarnings(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    map[resultKey][]event
+		expected map[resultKey][]event
+	}{
+		{
+			name:     "empty map",
+			input:    map[resultKey][]event{},
+			expected: map[resultKey][]event{},
+		},
+		{
+			name: "all build-output events",
+			input: map[resultKey][]event{
+				{Package: "pkg1", Test: "test1"}: {
+					{Action: "build-output", Package: "pkg1", Test: "test1", Output: "warning: something\n"},
+					{Action: "build-output", Package: "pkg1", Test: "test1", Output: "another warning\n"},
+				},
+				{Package: "pkg2", Test: "test2"}: {
+					{Action: "build-output", Package: "pkg2", Test: "test2", Output: "build warning\n"},
+				},
+			},
+			expected: map[resultKey][]event{},
+		},
+		{
+			name: "mixed events",
+			input: map[resultKey][]event{
+				{Package: "pkg1", Test: "test1"}: {
+					{Action: "build-output", Package: "pkg1", Test: "test1", Output: "warning: something\n"},
+					{Action: "run", Package: "pkg1", Test: "test1", Output: "=== RUN   test1\n"},
+					{Action: "pass", Package: "pkg1", Test: "test1", Output: "--- PASS: test1\n"},
+				},
+				{Package: "pkg2", Test: "test2"}: {
+					{Action: "build-output", Package: "pkg2", Test: "test2", Output: "build warning\n"},
+					{Action: "fail", Package: "pkg2", Test: "test2", Output: "--- FAIL: test2\n"},
+				},
+			},
+			expected: map[resultKey][]event{
+				{Package: "pkg1", Test: "test1"}: {
+					{Action: "build-output", Package: "pkg1", Test: "test1", Output: "warning: something\n"},
+					{Action: "run", Package: "pkg1", Test: "test1", Output: "=== RUN   test1\n"},
+					{Action: "pass", Package: "pkg1", Test: "test1", Output: "--- PASS: test1\n"},
+				},
+				{Package: "pkg2", Test: "test2"}: {
+					{Action: "build-output", Package: "pkg2", Test: "test2", Output: "build warning\n"},
+					{Action: "fail", Package: "pkg2", Test: "test2", Output: "--- FAIL: test2\n"},
+				},
+			},
+		},
+		{
+			name: "no build-output events",
+			input: map[resultKey][]event{
+				{Package: "pkg1", Test: "test1"}: {
+					{Action: "run", Package: "pkg1", Test: "test1", Output: "=== RUN   test1\n"},
+					{Action: "pass", Package: "pkg1", Test: "test1", Output: "--- PASS: test1\n"},
+				},
+				{Package: "pkg2", Test: ""}: {
+					{Action: "pass", Package: "pkg2", Output: "ok pkg2\n"},
+				},
+			},
+			expected: map[resultKey][]event{
+				{Package: "pkg1", Test: "test1"}: {
+					{Action: "run", Package: "pkg1", Test: "test1", Output: "=== RUN   test1\n"},
+					{Action: "pass", Package: "pkg1", Test: "test1", Output: "--- PASS: test1\n"},
+				},
+				{Package: "pkg2", Test: ""}: {
+					{Action: "pass", Package: "pkg2", Output: "ok pkg2\n"},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := filterBuildWarnings(tt.input)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 type resultAccepterFunc func(res result) error
 
 func (f resultAccepterFunc) Accept(res result) error {
