@@ -111,11 +111,33 @@ func (a *resultAggregator) Accept(e event) error {
 	return nil
 }
 
+// filterBuildWarnings returns a copy of the supplied events map after removing
+// any resultKeys that only contain "build-output" actions. These actions
+// without a cooresponding build-fail event are just build warnings and do not
+// change the output of the tests.
+func filterBuildWarnings(events map[resultKey][]event) map[resultKey][]event {
+	filtered := make(map[resultKey][]event, len(events))
+	for rk, eventsByRK := range events {
+		foundEvent := false
+		for _, event := range eventsByRK {
+			if event.Action != "build-output" {
+				foundEvent = true
+				break
+			}
+		}
+		if foundEvent {
+			filtered[rk] = events[rk]
+		}
+	}
+	return filtered
+}
+
 // CheckAllEventsConsumed checks that all events are consumed and that
 // no error occurred in any Accept.
 func (a *resultAggregator) CheckAllEventsConsumed() error {
-	if a.err == nil && len(a.events) > 0 {
-		a.setErr(fmt.Errorf("not all events were consumed: %#v", a.events))
+	filteredEvents := filterBuildWarnings(a.events)
+	if a.err == nil && len(filteredEvents) > 0 {
+		a.setErr(fmt.Errorf("not all events were consumed: %#v", filteredEvents))
 	}
 	return a.err
 }
