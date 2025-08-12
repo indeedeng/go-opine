@@ -113,7 +113,7 @@ func (a *resultAggregator) Accept(e event) error {
 
 // filterBuildWarnings returns a copy of the supplied events map after removing
 // any resultKeys that only contain "build-output" actions. These actions
-// without a cooresponding build-fail event are just build warnings and do not
+// without a corresponding build-fail event are just build warnings and do not
 // change the output of the tests.
 func filterBuildWarnings(events map[resultKey][]event) map[resultKey][]event {
 	filtered := make(map[resultKey][]event, len(events))
