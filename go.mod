@@ -1,8 +1,6 @@
 module oss.indeed.com/go/go-opine
 
-go 1.23.0
-
-toolchain go1.23.1
+go 1.25.0
 
 require (
 	github.com/google/subcommands v1.2.0
