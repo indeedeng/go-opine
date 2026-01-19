@@ -112,6 +112,9 @@ func Run(opts ...Option) error {
 	if o.p != 0 {
 		args = append(args, "-p="+strconv.Itoa(o.p))
 	}
+
+	args = append(args, "-exec", "env - GOMAXPROCS=1")
+
 	args = append(args, "./...")
 	cmd := exec.Command("go", args...)
 	cmd.Stderr = os.Stderr
