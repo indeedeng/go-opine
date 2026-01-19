@@ -113,7 +113,7 @@ func Run(opts ...Option) error {
 		args = append(args, "-p="+strconv.Itoa(o.p))
 	}
 
-	args = append(args, "-exec", "env - GOMAXPROCS=1")
+	args = append(args, "-exec", "env")
 
 	args = append(args, "./...")
 	cmd := exec.Command("go", args...)
