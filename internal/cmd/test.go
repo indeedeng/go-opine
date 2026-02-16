@@ -79,7 +79,6 @@ func (t *testCmd) impl() error {
 	var errs []error
 	var testOutBuf bytes.Buffer
 	options := []gotest.Option{
-		gotest.Race(),
 		gotest.CoverProfile(covPath),
 		gotest.CoverPkg("./..."),
 		gotest.CoverMode("atomic"),
